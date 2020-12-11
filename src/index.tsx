@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { Metric } from 'web-vitals';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
@@ -11,7 +12,19 @@ ReactDOM.render(
   document.getElementById('root'),
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals(console.log);
+function sendToAnalytics({ id, name, value, delta }: Metric) {
+  console.log({ id, name, value, delta });
+  const body = JSON.stringify({ id, name, value, delta });
+  const url = process.env.REACT_APP_ANALYTICS_URL!;
+
+  // Use `navigator.sendBeacon()` if available, falling back to `fetch()`
+  if (navigator.sendBeacon) {
+    console.log('sendBeacon');
+    navigator.sendBeacon(url, body);
+  } else {
+    console.log('fetch');
+    fetch(url, { body, method: 'POST', keepalive: true });
+  }
+}
+
+reportWebVitals(sendToAnalytics);
